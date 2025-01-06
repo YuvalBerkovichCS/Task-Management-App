@@ -17,10 +17,6 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   const { TaskName } = req.body;
 
-  if (!TaskName) {
-    return res.status(400).json({ error: "TaskName is required" });
-  }
-
   try {
     const request = new sql.Request();
 
@@ -53,6 +49,27 @@ router.delete("/:TaskID", async (req, res) => {
   } catch (error) {
     console.error("Error deleting task:", error.message);
     res.status(500).json({ error: "Failed to delete task" });
+  }
+});
+
+router.put("/:TaskID", async (req, res) => {
+  const { TaskID } = req.params;
+  const { Completed } = req.body;
+
+  try {
+    const request = new sql.Request();
+    const result = await request
+      .input("TaskID", sql.Int, TaskID)
+      .input("Completed", sql.Bit, Completed).query(`
+      UPDATE Tasks SET Completed = @Completed
+      OUTPUT inserted.TaskID, inserted.TaskName, inserted.Completed
+      WHERE TaskID = @TaskID
+      `);
+    const updatedTask = result.recordset[0];
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error("Error updating task:", error.message);
+    res.status(500).json({ error: "Failed to update task" });
   }
 });
 

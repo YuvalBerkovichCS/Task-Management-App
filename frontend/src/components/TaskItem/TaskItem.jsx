@@ -1,7 +1,7 @@
 import * as S from "./style";
 
 const TaskItem = ({ TaskID, Completed, TaskName, toggleTask, deleteTask }) => {
-  console.log("TaskItem Props:", { TaskID, TaskName, Completed });
+  //console.log("÷//TaskItem Props:", { TaskID, TaskName, Completed });
 
   return (
     <S.MUIListItem key={TaskID}>

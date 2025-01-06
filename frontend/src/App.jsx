@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Axios from "axios";
 import GlobalStyles from "./GlobalStyles";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
@@ -7,60 +8,50 @@ const App = () => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const getAllTasks = async () => {
       try {
-        const response = await fetch("/api/tasks");
-        const data = await response.json();
+        const response = await Axios.get("/api/tasks");
+        const data = response.data;
         setTasks(data);
       } catch (error) {
-        console.error("Error fetching tasks:", error);
+        console.error("Failed to retrieve tasks:", error);
       }
     };
-    fetchTasks();
+    getAllTasks();
   }, []);
 
   const addTask = async (TaskName) => {
     try {
-      const response = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ TaskName }),
-      });
-
-      if (!response.ok) throw new Error("Failed to add task");
-
-      const newTask = await response.json(); // Response from the backend
-      setTasks((currentTasks) => [...currentTasks, newTask]); // Add the new task to state
+      const response = await Axios.post("/api/tasks", { TaskName });
+      const newTask = response.data;
+      setTasks((currentTasks) => [...currentTasks, newTask]);
     } catch (error) {
       console.error("Error adding task:", error);
     }
   };
-  const toggleTask = (TaskID, Completed) => {
-    setTasks((currentTasks) => {
-      return currentTasks.map((task) => {
-        if (task.TaskID === TaskID) {
-          return { ...task, Completed };
-        }
-        return task;
-      });
-    });
-  };
 
   const deleteTask = async (TaskID) => {
     try {
-      const response = await fetch(`/api/tasks/${TaskID}`, {
-        method: "DELETE",
+      const response = await Axios.delete(`/api/tasks/${TaskID}`);
+      setTasks((currentTasks) => {
+        return currentTasks.filter((task) => task.TaskID !== TaskID);
       });
+    } catch (error) {
+      console.log("Failed to delete task:", error);
+    }
+  };
 
-      if (!response.ok) throw new Error("Failed to delete task");
-
+  const toggleTask = async (TaskID, Completed) => {
+    try {
+      const response = await Axios.put(`/api/tasks/${TaskID}`, { Completed });
+      const data = response.data;
       setTasks((currentTasks) =>
-        currentTasks.filter((task) => task.TaskID !== TaskID)
+        currentTasks.map((task) =>
+          task.TaskID === TaskID ? { ...task, Completed } : task
+        )
       );
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.log("Failed to update task:", error);
     }
   };
 
